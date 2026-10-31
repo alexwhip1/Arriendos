@@ -1,0 +1,14 @@
+{
+  "name": "Mis Arriendos",
+  "short_name": "Arriendos",
+  "description": "Administración sencilla de arriendos: pagos, recibos y contratos.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fafaf7",
+  "theme_color": "#1f4e79",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
