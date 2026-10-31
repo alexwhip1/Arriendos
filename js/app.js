@@ -151,7 +151,7 @@ function go(hash) {
 }
 
 // Encabezado con botón grande para volver.
-function pageHeader(title, back = '/') {
+function pageHeader(title, back = 'inicio') {
   const backBtn = back === null ? ''
     : back === 'history' ? '<button type="button" class="btn-back" data-act="historyBack">← Volver</button>'
       : `<a class="btn-back" href="#${back}">← Volver</a>`;
@@ -241,7 +241,7 @@ function viewHome() {
         if (st.code === 'paid') paidCount++;
         if (st.code === 'late' || st.code === 'partial') late.push({ u, c, st });
       }
-      return `<a class="unit-card st-${st.code}" href="#/u/${u.id}">
+      return `<a class="unit-card st-${st.code}" href="#u-${u.id}">
         <span class="unit-name">${U.esc(u.name)}</span>
         <span class="unit-tenant">${c ? U.esc(c.tenantName) : 'Sin arrendatario'}</span>
         ${c ? `<span class="unit-rent">${U.money(c.rent)}</span>` : ''}
@@ -269,7 +269,7 @@ function viewHome() {
         alerts.push(`<li class="alert alert-amber">
           <span>📅 El contrato de <strong>${U.esc(u ? u.name : '')}</strong> (${U.esc(c.tenantName)})
           ${days < 0 ? 'venció' : 'vence'} el ${U.dateLong(contractEnd(c))}</span>
-          <a class="btn btn-small" href="#/contrato-renovar/${c.id}">Renovar</a>
+          <a class="btn btn-small" href="#contrato-renovar-${c.id}">Renovar</a>
         </li>`);
       }
     });
@@ -278,11 +278,11 @@ function viewHome() {
     if (hasData && since > 30) {
       alerts.push(`<li class="alert alert-amber"><span>💾 ${S.settings.lastBackup
         ? `Hace ${since} días que no guarda una copia de seguridad.` : 'Todavía no ha guardado una copia de seguridad.'}</span>
-        <a class="btn btn-small" href="#/respaldo">Guardar copia</a></li>`);
+        <a class="btn btn-small" href="#respaldo">Guardar copia</a></li>`);
     }
     if (!S.settings.ownerName) {
       alerts.push(`<li class="alert alert-blue"><span>👋 Para empezar, escriba sus datos (nombre, cédula, dirección) en Configuración. Así salen solos en los contratos.</span>
-        <a class="btn btn-small" href="#/config">Ir a Configuración</a></li>`);
+        <a class="btn btn-small" href="#config">Ir a Configuración</a></li>`);
     }
   }
 
@@ -303,8 +303,8 @@ function viewHome() {
     <p class="tip">Toque un apartamento para registrar un pago o ver el contrato.</p>
     ${sections}
     <div class="bottom-actions">
-      <a class="btn btn-big" href="#/config">⚙️ Configuración</a>
-      <a class="btn btn-big" href="#/respaldo">💾 Copia de seguridad</a>
+      <a class="btn btn-big" href="#config">⚙️ Configuración</a>
+      <a class="btn btn-big" href="#respaldo">💾 Copia de seguridad</a>
     </div>`;
 
   actions = {
@@ -318,7 +318,7 @@ function viewHome() {
 
 function viewUnit(unitId) {
   const u = unitById(unitId);
-  if (!u) return go('/');
+  if (!u) return go('inicio');
   const c = activeContract(u.id);
   const cur = U.currentPeriod();
   const payments = S.payments.filter(p => p.unitId === u.id)
@@ -349,12 +349,12 @@ function viewUnit(unitId) {
         </div>` : ''}
       </section>
       <div class="actions">
-        <a class="btn btn-big btn-primary" href="#/pagar/${c.id}">💵 Registrar un pago</a>
-        <a class="btn btn-big" href="#/pagos/${u.id}">🧾 Ver pagos y recibos</a>
-        <a class="btn btn-big" href="#/contrato/${c.id}">📄 Ver o imprimir el contrato</a>
-        <a class="btn btn-big" href="#/documentos/${c.id}">📎 Documentos (contrato firmado, cédula)</a>
-        <a class="btn btn-big" href="#/contrato-renovar/${c.id}">🔁 Renovar contrato</a>
-        <a class="btn btn-big" href="#/contrato-editar/${c.id}">✏️ Corregir datos del arrendatario</a>
+        <a class="btn btn-big btn-primary" href="#pagar-${c.id}">💵 Registrar un pago</a>
+        <a class="btn btn-big" href="#pagos-${u.id}">🧾 Ver pagos y recibos</a>
+        <a class="btn btn-big" href="#contrato-${c.id}">📄 Ver o imprimir el contrato</a>
+        <a class="btn btn-big" href="#documentos-${c.id}">📎 Documentos (contrato firmado, cédula)</a>
+        <a class="btn btn-big" href="#contrato-renovar-${c.id}">🔁 Renovar contrato</a>
+        <a class="btn btn-big" href="#contrato-editar-${c.id}">✏️ Corregir datos del arrendatario</a>
         <button type="button" class="btn btn-big btn-danger-outline" data-act="end">🚪 El arrendatario se va (terminar contrato)</button>
       </div>`;
   } else {
@@ -364,20 +364,20 @@ function viewUnit(unitId) {
         <p>Cuando llegue un nuevo arrendatario, toque el botón de abajo. Solo tendrá que escribir sus datos y el contrato se hace solo.</p>
       </section>
       <div class="actions">
-        <a class="btn btn-big btn-primary" href="#/contrato-nuevo/${u.id}">➕ Nuevo arrendatario y contrato</a>
-        ${payments.length ? `<a class="btn btn-big" href="#/pagos/${u.id}">🧾 Ver pagos anteriores</a>` : ''}
+        <a class="btn btn-big btn-primary" href="#contrato-nuevo-${u.id}">➕ Nuevo arrendatario y contrato</a>
+        ${payments.length ? `<a class="btn btn-big" href="#pagos-${u.id}">🧾 Ver pagos anteriores</a>` : ''}
       </div>`;
   }
 
   const recent = payments.slice(0, 4).map(p => `
-    <li><a href="#/comprobante/${p.id}"><span>${U.periodLabel(p.period)}</span><strong>${U.money(p.amount)}</strong>
+    <li><a href="#comprobante-${p.id}"><span>${U.periodLabel(p.period)}</span><strong>${U.money(p.amount)}</strong>
       <span class="muted">pagado el ${U.dateShort(p.date)}</span></a></li>`).join('');
 
   app.innerHTML = `${pageHeader(unitLabel(u))}
     ${body}
     ${recent ? `<section class="block"><h2>Últimos pagos</h2><ul class="link-list">${recent}</ul></section>` : ''}
     ${past.length ? `<section class="block"><h2>Arrendatarios anteriores</h2><ul class="link-list">${past.map(x => `
-      <li><a href="#/contrato/${x.id}"><span>${U.esc(x.tenantName)}</span>
+      <li><a href="#contrato-${x.id}"><span>${U.esc(x.tenantName)}</span>
       <span class="muted">${U.dateShort(x.startDate)} al ${U.dateShort(x.endedOn || contractEnd(x))}</span></a></li>`).join('')}</ul></section>` : ''}`;
 
   actions = {
@@ -397,7 +397,7 @@ function viewUnit(unitId) {
 
 function viewPay(contractId) {
   const c = contractById(contractId);
-  if (!c) return go('/');
+  if (!c) return go('inicio');
   const u = unitById(c.unitId);
   const cur = U.currentPeriod();
   const startP = U.periodOf(c.startDate);
@@ -408,7 +408,7 @@ function viewPay(contractId) {
   const firstUnpaid = periods.find(p => p >= tracked && p <= U.shiftPeriod(cur, 1) && paidFor(c.id, p) < c.rent) || cur;
   const missing = p => Math.max(0, c.rent - paidFor(c.id, p));
 
-  app.innerHTML = `${pageHeader('Registrar un pago', '/u/' + u.id)}
+  app.innerHTML = `${pageHeader('Registrar un pago', 'u-' + u.id)}
     <p class="lead">${U.esc(c.tenantName)} — ${U.esc(unitLabel(u))}</p>
     <form id="f" class="form" novalidate>
       ${selectField('¿Qué mes está pagando?', 'period', periods.map(p => [p,
@@ -423,7 +423,7 @@ function viewPay(contractId) {
         ${fileButton('file', '📷 Tomar foto o elegir archivo')}</div>
       ${field('Nota (opcional)', 'note', '', { hint: 'Por ejemplo: "pagó con transferencia del hijo"' })}
       <button type="submit" class="btn btn-big btn-primary">✅ Guardar pago</button>
-      <a class="btn btn-big" href="#/u/${u.id}">Cancelar</a>
+      <a class="btn btn-big" href="#u-${u.id}">Cancelar</a>
     </form>`;
 
   const f = document.getElementById('f');
@@ -449,7 +449,7 @@ function viewPay(contractId) {
       S.payments.push(p);
       await save('payments', 'seq');
       justSaved = p.id;
-      go('/comprobante/' + p.id);
+      go('comprobante-' + p.id);
     } catch (err) {
       console.error(err);
       btn.disabled = false;
@@ -463,7 +463,7 @@ function viewPay(contractId) {
 
 function viewReceipt(paymentId) {
   const p = paymentById(paymentId);
-  if (!p) return go('/');
+  if (!p) return go('inicio');
   const c = contractById(p.contractId);
   const u = unitById(p.unitId);
   const b = u && buildingById(u.buildingId);
@@ -471,13 +471,13 @@ function viewReceipt(paymentId) {
   justSaved = null;
   const phone = c && c.tenantPhone;
 
-  app.innerHTML = `${pageHeader('Comprobante de pago', '/u/' + p.unitId)}
+  app.innerHTML = `${pageHeader('Comprobante de pago', 'u-' + p.unitId)}
     ${fresh ? `<div class="success no-print">✅ ¡Pago guardado! Si quiere, envíele el comprobante al arrendatario.</div>` : ''}
     <div class="actions no-print">
       ${phone ? `<a class="btn btn-big btn-wa" target="_blank" rel="noopener" href="${waLink(phone, receiptText(p))}">💬 Enviar comprobante por WhatsApp</a>` : ''}
       <button type="button" class="btn btn-big" data-act="print">🖨️ Imprimir comprobante</button>
-      ${p.fileId ? `<a class="btn btn-big" href="#/archivo/${p.fileId}">🖼️ Ver foto del recibo</a>` : ''}
-      <a class="btn btn-big ${fresh ? 'btn-primary' : ''}" href="#/">🏠 Volver al inicio</a>
+      ${p.fileId ? `<a class="btn btn-big" href="#archivo-${p.fileId}">🖼️ Ver foto del recibo</a>` : ''}
+      <a class="btn btn-big ${fresh ? 'btn-primary' : ''}" href="#inicio">🏠 Volver al inicio</a>
     </div>
     <article class="paper">${T.receiptHTML(S, p, c || {}, u, b)}</article>
     <div class="actions no-print">
@@ -492,7 +492,7 @@ function viewReceipt(paymentId) {
       await save('payments');
       if (p.fileId) await DB.del('files', p.fileId);
       toast('Pago borrado.');
-      go('/u/' + p.unitId);
+      go('u-' + p.unitId);
     },
   };
 }
@@ -501,12 +501,12 @@ function viewReceipt(paymentId) {
 
 function viewPayments(unitId) {
   const u = unitById(unitId);
-  if (!u) return go('/');
+  if (!u) return go('inicio');
   const list = S.payments.filter(p => p.unitId === u.id)
     .sort((a, b) => b.period.localeCompare(a.period) || b.date.localeCompare(a.date));
   const total = list.reduce((s, p) => s + p.amount, 0);
 
-  app.innerHTML = `${pageHeader('Pagos de ' + unitLabel(u), '/u/' + u.id)}
+  app.innerHTML = `${pageHeader('Pagos de ' + unitLabel(u), 'u-' + u.id)}
     ${list.length ? `<p class="lead">${list.length} pagos registrados · Total ${U.money(total)}</p>
     <ul class="pay-list">${list.map(p => {
       const c = contractById(p.contractId);
@@ -514,8 +514,8 @@ function viewPayments(unitId) {
         <div><strong>${U.periodLabel(p.period)}</strong> — ${U.money(p.amount)}<br>
         <span class="muted">${U.esc(c ? c.tenantName : '')} · pagó el ${U.dateShort(p.date)} · ${U.esc(p.method || '')}</span></div>
         <div class="row-buttons">
-          <a class="btn" href="#/comprobante/${p.id}">🧾 Comprobante</a>
-          ${p.fileId ? `<a class="btn" href="#/archivo/${p.fileId}">🖼️ Foto del recibo</a>` : ''}
+          <a class="btn" href="#comprobante-${p.id}">🧾 Comprobante</a>
+          ${p.fileId ? `<a class="btn" href="#archivo-${p.fileId}">🖼️ Foto del recibo</a>` : ''}
         </div></li>`;
     }).join('')}</ul>` : '<p class="lead">Todavía no hay pagos registrados.</p>'}`;
 }
@@ -559,9 +559,9 @@ function viewContractForm({ unitId, editId, renewId }) {
     };
     title = 'Nuevo arrendatario';
   }
-  if (!c || !c.unitId) return go('/');
+  if (!c || !c.unitId) return go('inicio');
   u = unitById(c.unitId);
-  back = editId || renewId ? '/u/' + c.unitId : '/u/' + unitId;
+  back = 'u-' + c.unitId;
 
   app.innerHTML = `${pageHeader(title, back)}
     <p class="lead">${U.esc(unitLabel(u))}</p>
@@ -624,7 +624,7 @@ function viewContractForm({ unitId, editId, renewId }) {
     }
     await save('contracts');
     toast(editId ? 'Cambios guardados.' : 'Contrato listo. Revíselo e imprímalo.');
-    go('/contrato/' + id);
+    go('contrato-' + id);
   });
 }
 
@@ -632,23 +632,23 @@ function viewContractForm({ unitId, editId, renewId }) {
 
 function viewContract(contractId) {
   const c = contractById(contractId);
-  if (!c) return go('/');
+  if (!c) return go('inicio');
   const u = unitById(c.unitId);
   const b = u && buildingById(u.buildingId);
   const html = T.fill(S.template, T.contractValues(S, c, u, b));
   const missing = (html.match(/class="blank"/g) || []).length;
 
-  app.innerHTML = `${pageHeader('Contrato de ' + c.tenantName, '/u/' + c.unitId)}
+  app.innerHTML = `${pageHeader('Contrato de ' + c.tenantName, 'u-' + c.unitId)}
     ${c.status !== 'activo' ? '<p class="tip no-print">Este contrato ya terminó. Se guarda solo como registro.</p>' : ''}
     ${missing ? `<p class="tip no-print">ℹ️ Hay ${missing} datos en blanco (se ven como una raya). Puede completarlos en
-      ${S.settings.ownerName ? '' : '<a href="#/config">Configuración</a> o '}<a href="#/contrato-editar/${c.id}">Corregir datos</a>, o escribirlos a mano después de imprimir.</p>` : ''}
+      ${S.settings.ownerName ? '' : '<a href="#config">Configuración</a> o '}<a href="#contrato-editar-${c.id}">Corregir datos</a>, o escribirlos a mano después de imprimir.</p>` : ''}
     <div class="actions no-print">
       <button type="button" class="btn btn-big btn-primary" data-act="print">🖨️ Imprimir o guardar como PDF</button>
       <button type="button" class="btn btn-big" data-act="word">⬇️ Descargar para Word</button>
-      <a class="btn btn-big" href="#/documentos/${c.id}">📎 Subir el contrato firmado</a>
+      <a class="btn btn-big" href="#documentos-${c.id}">📎 Subir el contrato firmado</a>
     </div>
     <article class="paper contract">${html}</article>
-    <p class="tip no-print">¿Quiere cambiar el texto de todos los contratos? Vaya a <a href="#/plantilla">Configuración → Texto del contrato</a>.</p>`;
+    <p class="tip no-print">¿Quiere cambiar el texto de todos los contratos? Vaya a <a href="#plantilla">Configuración → Texto del contrato</a>.</p>`;
 
   actions = {
     print: printPage,
@@ -660,13 +660,13 @@ function viewContract(contractId) {
 
 function viewDocs(contractId) {
   const c = contractById(contractId);
-  if (!c) return go('/');
+  if (!c) return go('inicio');
   c.files = c.files || [];
 
-  app.innerHTML = `${pageHeader('Documentos de ' + c.tenantName, '/u/' + c.unitId)}
+  app.innerHTML = `${pageHeader('Documentos de ' + c.tenantName, 'u-' + c.unitId)}
     ${c.files.length ? `<ul class="pay-list">${c.files.map((d, i) => `
       <li class="pay-item"><div><strong>${U.esc(d.label)}</strong><br><span class="muted">subido el ${U.dateShort(d.added)}</span></div>
-      <div class="row-buttons"><a class="btn" href="#/archivo/${d.fileId}">👁️ Ver</a>
+      <div class="row-buttons"><a class="btn" href="#archivo-${d.fileId}">👁️ Ver</a>
       <button type="button" class="btn btn-danger-outline" data-act="del" data-i="${i}">🗑️ Borrar</button></div></li>`).join('')}</ul>`
       : '<p class="lead">Todavía no hay documentos guardados.</p>'}
     <form id="f" class="form">
@@ -744,8 +744,8 @@ function viewSettings() {
 
     <section class="block"><h2>Más opciones</h2>
       <div class="actions">
-        <a class="btn btn-big" href="#/plantilla">📝 Texto del contrato</a>
-        <a class="btn btn-big" href="#/respaldo">💾 Copia de seguridad</a>
+        <a class="btn btn-big" href="#plantilla">📝 Texto del contrato</a>
+        <a class="btn btn-big" href="#respaldo">💾 Copia de seguridad</a>
       </div>
     </section>`;
 
@@ -815,7 +815,7 @@ function applyTextSize() {
 // ===================== Plantilla del contrato =====================
 
 function viewTemplate() {
-  app.innerHTML = `${pageHeader('Texto del contrato', '/config')}
+  app.innerHTML = `${pageHeader('Texto del contrato', 'config')}
     <p class="tip">Este es el texto que se usa para <strong>todos</strong> los contratos. Las palabras entre {{ }} se cambian
       solas por los datos de cada arrendatario. Para agregar un dato, toque el lugar del texto y luego el botón del dato.</p>
     <form id="f" class="form">
@@ -932,21 +932,22 @@ function viewBackup() {
 
 // ===================== Navegación =====================
 
+// Direcciones simples (#u-abc123) para que funcionen en cualquier navegador o visor.
 const ROUTES = [
-  [/^\/?$/, viewHome],
-  [/^\/u\/(\w+)$/, viewUnit],
-  [/^\/pagar\/(\w+)$/, viewPay],
-  [/^\/pagos\/(\w+)$/, viewPayments],
-  [/^\/comprobante\/(\w+)$/, viewReceipt],
-  [/^\/archivo\/(\w+)$/, viewFile],
-  [/^\/contrato\/(\w+)$/, viewContract],
-  [/^\/contrato-nuevo\/(\w+)$/, id => viewContractForm({ unitId: id })],
-  [/^\/contrato-editar\/(\w+)$/, id => viewContractForm({ editId: id })],
-  [/^\/contrato-renovar\/(\w+)$/, id => viewContractForm({ renewId: id })],
-  [/^\/documentos\/(\w+)$/, viewDocs],
-  [/^\/config$/, viewSettings],
-  [/^\/plantilla$/, viewTemplate],
-  [/^\/respaldo$/, viewBackup],
+  [/^(?:inicio)?$/, viewHome],
+  [/^u-(\w+)$/, viewUnit],
+  [/^pagar-(\w+)$/, viewPay],
+  [/^pagos-(\w+)$/, viewPayments],
+  [/^comprobante-(\w+)$/, viewReceipt],
+  [/^archivo-(\w+)$/, viewFile],
+  [/^contrato-(\w+)$/, viewContract],
+  [/^contrato-nuevo-(\w+)$/, id => viewContractForm({ unitId: id })],
+  [/^contrato-editar-(\w+)$/, id => viewContractForm({ editId: id })],
+  [/^contrato-renovar-(\w+)$/, id => viewContractForm({ renewId: id })],
+  [/^documentos-(\w+)$/, viewDocs],
+  [/^config$/, viewSettings],
+  [/^plantilla$/, viewTemplate],
+  [/^respaldo$/, viewBackup],
 ];
 
 function render() {
@@ -958,13 +959,13 @@ function render() {
     const m = path.match(re);
     if (m) { view(...m.slice(1)); return; }
   }
-  go('/');
+  go('inicio');
 }
 
 app.addEventListener('click', async e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
-  if (el.dataset.act === 'historyBack') { history.length > 1 ? history.back() : go('/'); return; }
+  if (el.dataset.act === 'historyBack') { history.length > 1 ? history.back() : go('inicio'); return; }
   const fn = actions[el.dataset.act];
   if (fn) { e.preventDefault(); await fn(el); }
 });

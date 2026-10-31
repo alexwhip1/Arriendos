@@ -1,6 +1,6 @@
 // Permite abrir la aplicación aunque no haya internet.
 // Al cambiar archivos de la aplicación, suba el número de VERSION.
-const VERSION = 'arriendos-v1';
+const VERSION = 'arriendos-v2';
 const FILES = [
   './', 'index.html', 'css/styles.css', 'js/util.js', 'js/db.js', 'js/templates.js', 'js/app.js',
   'manifest.webmanifest', 'icons/icon.svg',
